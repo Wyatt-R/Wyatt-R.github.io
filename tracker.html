@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Keep Your Notes</title>
+		<style type="text/css">
+			:root{
+
+			}
+			body{
+				margin:0;
+				width:100vw;
+				height:100vh;
+				background:linear-gradient(90deg, #00ff9e, #0074ff);
+				overflow: hidden;
+			}
+			.var1{
+				width:100px;
+				height:100px;
+				background:#000;
+			}
+			.container{
+				width:100vw;
+				height:100vh;
+				overflow: auto;
+				position: absolute;
+				display:flex;
+				align-items: flex-start;
+				align-content: flex-start;
+				flex-wrap: wrap;
+				top:0;
+				left:0;
+			}
+			.item{
+				background: #fff;
+				margin: 10px;
+				display:flex;
+				justify-content: center;
+				flex-direction: column;
+				align-items: center;
+				padding:10px 15px;
+				border-radius: 15px;
+			}
+			input{
+				border:#0000 3px solid;
+				transition: 0.3s;
+				font-family: Verdana;
+			}
+			input:focus{
+				outline:none;
+				border-bottom-color:#3a3a3a;
+			}
+			.title{
+				font-size:1em;
+			}
+			.date{
+				color:#aaa;
+			}
+			.extra{
+
+			}
+			.close{
+				font-family: Helvetica;
+				background:#c00;
+				color:#fff;
+				border-radius: 10000px;
+				transition: 0.2s;
+				font-weight: bolder;
+				margin:5px;
+				cursor:pointer;
+				user-select: none;
+				padding:7px 20px;
+				text-align: center;
+			}
+			.close:hover{
+				background: #f00;
+			}
+			.plus{
+				background:#999;
+				color:#fff;
+				font-size:2em;
+				font-family: Helvetica;
+				font-weight: bolder;
+				cursor: pointer;
+				user-select: none;
+				transition: 0.2s;
+				border-radius:15px;
+				margin:10px;
+				padding:10px 15px;
+			}
+			.plus:hover{
+				transform:scale(1.1);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="app"> </div>
+	</body>
+	<script type="text/javascript">
+		var elementsData = {
+			var1: {
+				type: 'div',
+				class: 'var1',
+				parent: 'app'
+			},
+			container: {
+				type: 'div',
+				class: 'container',
+				parent: 'app'
+			},
+			item: {
+				type: 'div',
+				class: 'item',
+				parent: 'container',
+				parentIsUnique: false
+			},
+			title: {
+				type: 'input',
+				class: 'title',
+				parent: 'item',
+				parentIsUnique: true
+			},
+			date: {
+				type: 'input',
+				class: 'date',
+				parent: 'item',
+				parentIsUnique: true
+			},
+			extra: {
+				type: 'input',
+				class: 'extra',
+				parent: 'item',
+				parentIsUnique: true
+			},
+			close: {
+				type: 'div',
+				class: 'close',
+				parent: 'item',
+				parentIsUnique: true,
+				event: {
+					trigger: 'click'
+				}
+			},
+			plus: {
+				type: 'div',
+				class: 'plus',
+				parent: 'container',
+				event: {
+					trigger: 'click',
+					function: function() {data.reminders.push({title: 'Title', date: 'Date', extra: 'More info here'});reload();}
+				}
+			}
+		}
+		var data;
+		if (localStorage.data) {
+			data = JSON.parse(localStorage.data)
+		} else {
+			data = {reminders: [{title: 'Set a new reminder!', date: 'Now!', extra: ':)'}, {title: 'Set a new reminder2!', date: 'Now!', extra: ':)'}, {title: 'Set a new reminder3!', date: 'Now!', extra: ':)'}, {title: 'Set a new reminder4!', date: 'Now!', extra: ':)'}]}
+
+		}
+		var elements = {app: document.querySelector('.app')}
+		function create(elem, number) {
+			var finalElem;
+			if (number) {
+				finalElem = elem + number;
+			} else {
+				finalElem = elem;
+			}
+			function elementProperties(elem) {
+				return elementsData[elem];
+			}
+			var getElem = elementProperties(elem);
+			var parent = getElem.parent;
+			if (number && getElem.parentIsUnique) {
+				parent = parent + number;
+			}
+			elements[finalElem] = document.createElement(getElem.type);
+			elements[finalElem].className = getElem.class;
+			elements[parent].append(elements[finalElem])
+			if (elem == 'title') {
+				elements[finalElem].value = data.reminders[number].title;
+				elements[finalElem].addEventListener('keydown', function() {setTimeout(function() {data.reminders[number].title = elements[finalElem].value}, 10)})
+			} else if (elem == 'date') {
+				elements[finalElem].value = data.reminders[number].date;
+				elements[finalElem].addEventListener('keydown', function() {setTimeout(function() {data.reminders[number].date = elements[finalElem].value}, 10)})
+			} else if (elem == 'extra') {
+				elements[finalElem].value = data.reminders[number].extra;
+				elements[finalElem].addEventListener('keydown', function() {setTimeout(function() {data.reminders[number].extra = elements[finalElem].value}, 10)})
+			} else if (elem == 'close') {
+				elements[finalElem].innerHTML = 'X';
+				elements[finalElem].addEventListener(getElem.event.trigger, function() {
+					setTimeout(function() {
+						elements['item' + number].remove();
+						for (i=0;i<elements.length;i++) {
+							if (elements[i] == 'item' + i) {
+								elements.splice(i, 1)
+								console.log(i)
+							}
+							if (elements[i] == 'date' + i) {
+								elements.splice(i, 1)
+							}
+							if (elements[i] == 'extra' + i) {
+								elements.splice(i, 1)
+							}
+							if (elements[i] == 'close' + i) {
+								elements.splice(i, 1)
+							}
+						}
+						data.reminders.splice(number, 1)
+						reload();
+					}, 10)
+				})
+			} else if (elem == 'plus') {
+				elements[finalElem].innerHTML = '+'
+				elements[finalElem].addEventListener(getElem.event.trigger, getElem.event.function);
+			}
+		}
+		window.onload = function() {script()}
+		function script() {
+			create('container');
+			render();
+			var interval = setInterval(function() {localStorage.setItem('data', JSON.stringify(data))}, 100)
+		}
+		function reload() {
+			elements.container.innerHTML = '';
+			render();
+		}
+		function render() {
+			for ( let i = 0 ; i < data.reminders.length ; i ++) {
+				create('item', JSON.stringify(i));
+				create('title', JSON.stringify(i));
+				create('date', JSON.stringify(i));
+				create('extra', JSON.stringify(i));
+				create('close', JSON.stringify(i));
+			}
+			create('plus');
+		}
+	</script>
+</html>
