@@ -249,47 +249,73 @@
 				margin: 20px;
 				background: #000;
 			}
-			#actual_color{
-				width: 240px;
-				height: 100px;
-				margin: 5px;
+			.bottom_div{
 				position: absolute;
 				left: 0;
 				top: calc((10px + 128px) + (10px + 100px));
-				height: calc((100% - (10px + 128px) - (15px + 100px) - 15px) / 2);
+				height: calc((100% - (10px + 128px) - (15px + 100px) - 5px) + 10px);
+				width: 240px;
+				display: flex;
+				flex-direction: column;
+
+			}
+			#actual_color{
+				width: 240px;
 				box-shadow: 0 0 8px 3px #0003;
 				background: #f00;
-			}
-			.delete_container{
-				width: 240px;
-				height: 100px;
+				width: 100%;
+				height: calc(50% - 5px);
 				margin: 5px;
-				position: absolute;
-				left: 0;
-				top: calc((10px + 128px) + (10px + 100px) + ((100% - (10px + 128px) - (15px + 100px) - 15px) / 2) + 10px);
-				height: calc((100% - (10px + 128px) - (15px + 100px) - 15px) / 2);
+			}
+			#delete_btn{
+				width: 240px;
+				height: calc(50% - 5px);
 				box-shadow: 0 0 8px 3px #0003;
 				display: flex;
 				justify-content: center;
 				align-items: center;
 				background: #3a0000;
+				margin: 5px;
+				cursor: pointer;
 			}
-			#delete_btn{
+			.delete_container{
 				font-size: 5rem;
 				color: #b00;
 				text-shadow:0 0 50px #f00;
-				cursor: pointer;
 				transition: 0.3s;
 			}
-			#delete_btn:hover{
+			#delete_btn:hover .delete_container{
 				transform: scale(1.5);
+			}
+			.save_container{
+				width: 240px;
+				margin: 5px;
+				height: 100px;
+				box-shadow: 0 0 8px 3px #0003;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				color: #fff;
+				background: #080;
+				cursor: pointer;
+				user-select: none;
+				font-size: 2rem;
+				font-family: Verdana, sans-serif;
+				transition: 0.2s;
+			}
+			.save_container:hover{
+				background: #0b0;
+			}
+			.save_container i{
+				font-size: 3rem;
+				margin-right: 0.5rem;
 			}
 		</style>
 		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">	</head>
 	<body>
 		<div class="flashlight"></div>
 		<div class="test"></div>
-		<div class="container">
+		<div class="container" style="left:100%;">
 			<div class="direction">
 				<div id="direction_selector">&#8679;</div>
 				<div class="direction_settings">
@@ -314,9 +340,15 @@
 			<div class="preview_container">
 				<div id="preview"></div>
 			</div>
-			<div id="actual_color"></div>
-			<div class="delete_container">
-				<i class="fas fa-trash" id="delete_btn"></i>
+			<div class="bottom_div">
+				<div id="actual_color"></div>
+				<div id="delete_btn">
+					<i class="fas fa-trash delete_container"></i>
+				</div>
+				<div class="save_container"id="save_btn">
+					<i class="fas fa-save"></i>
+					<p>Save</p>
+				</div>
 			</div>
 		</div>
 	</body>
@@ -324,6 +356,8 @@
 		var gradient = {angle: 0, points: ['#f00', '#ff0', '#0f0', '#0ff', '#00f', '#f0f']};
 		var selectedThumb = 0;
 		var rect = document.querySelector('.test');
+		var direction_selector = document.getElementById('direction_selector');
+		var selectingDirection = false;
 		window.addEventListener('mousemove', openMenu)
 		function openMenu(e) {
 			if (window.innerWidth - e.clientX < 10) {
@@ -334,6 +368,11 @@
 				}, 2000)
 			}
 		}
+		if (!localStorage.saved) save();
+		gradient = JSON.parse(localStorage.saved);
+		setBGParams(gradient)
+		var theta = gradient.angle;
+		setSelector(gradient.angle);
 		window.addEventListener('mousemove', (e) => {
 			/*
 			// https://stackoverflow.com/questions/9614109/how-to-calculate-an-angle-from-points
@@ -355,8 +394,6 @@
 			document.querySelector('.flashlight').style.background = `linear-gradient(${Math.round(theta)}deg, #000 40%, #ff05), linear-gradient(${Math.round(theta) + 45}deg, #fff, #fff0), linear-gradient(${Math.round(theta) - 45}deg, #fff, #0000)`;
 			*/
 		})
-		var direction_selector = document.getElementById('direction_selector');
-		selectingDirection = false;
 		direction_selector.addEventListener('click', () => {
 			console.log(direction_selector)
 			if (selectingDirection == false ) {
@@ -368,14 +405,12 @@
 			}
 		})
 		direction_selector.addEventListener('mousemove', (e) => {moveDirection(e)})
-		var theta = 0;
 		function moveDirection(e) {
 			if (selectingDirection == false) {
 				gradient.angle = theta;
 				setPreview(gradient)
 				return;
 			}
-			let d = direction_selector
 			var box = direction_selector.getBoundingClientRect()
 			var initial = {x: box.width / 2, y: box.height / 2}
 			var final = {x: e.clientX - box.x, y: e.clientY - box.y}
@@ -399,13 +434,17 @@
 		document.getElementById('add_point').onclick = () => {gradient.points.push('hsl(0, 100%, 50%)');selectedThumb=gradient.points.length - 1;setPoints()};
 		document.getElementById('remove_point').onclick = () => {if (gradient.points.length > 2) {gradient.points.pop();if (selectedThumb >= gradient.points.length) selectedThumb = gradient.points.length - 1;setPoints();}};
 		document.getElementById('delete_btn').onclick = () => {if (gradient.points.length > 2) {gradient.points.splice(selectedThumb, 1 );if (selectedThumb >= gradient.points.length) selectedThumb = gradient.points.length - 1;setPoints();}}
-		var isopen = true;
+		document.getElementById('save_btn').onclick = () => {save()}
+		var isopen = false;
 		function editor() {
 			if (!isopen) {
 				setPoints();
 				document.querySelector('.container').style.left = '0';
 				isopen = true;
 			}
+		}
+		function save() {
+			localStorage.setItem('saved', JSON.stringify(gradient))
 		}
 		document.getElementById('exit_icon').onclick = () => {document.querySelector('.container').style.left = '100vw';setTimeout(() => {isopen = false;}, 2000);setBGParams(gradient)}
 		function create(type) {return document.createElement(type)};
